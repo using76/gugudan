@@ -179,7 +179,7 @@ button:disabled{cursor:default;opacity:.4}
 .mark{position:absolute;left:50%;top:50%;width:calc(var(--c) * 2 + 96px);height:calc(var(--c) + 58px);transform:translate(-50%,-50%);pointer-events:none;overflow:visible}
 .mark path{fill:none;stroke:var(--redpen);stroke-width:6;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;opacity:0}
 .mark[data-kind="ok"] .p-ok,.mark[data-kind="no"] .p-no{opacity:.92}
-.mark.on[data-kind="ok"] .p-ok{animation:draw .3s ease-out forwards}
+.mark.on[data-kind="ok"] .p-ok{animation:draw .18s ease-out forwards}
 .mark.on[data-kind="no"] .p-no{animation:draw .16s ease-out forwards}
 .fb{font-family:var(--pen);color:var(--redpen);font-size:clamp(26px,4.4vh,38px);font-size:clamp(26px,4.4dvh,38px);line-height:1;min-height:1em;text-align:center}
 .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
@@ -630,6 +630,7 @@ function renderHomeBest(){
 
 /* ---------- 게임 ---------- */
 var G=null,gid=0;
+var TIME_SCALE=1.1; /* 타이머 1초 = 실제 1.1초 (시간이 10% 느리게 흐름) */
 function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
 function refill(){
   var dans=G.mode==='random'?DANS:[G.mode],pairs=[];
@@ -697,14 +698,14 @@ function countdown(id){
   })();
 }
 function begin(){
-  G.running=true;G.locked=false;G.endAt=performance.now()+G.time*1000;
+  G.running=true;G.locked=false;G.endAt=performance.now()+G.time*1000*TIME_SCALE;
   $('#cells').classList.add('live');
   nextQuestion();loop();
 }
 function loop(){
   if(!G||!G.running||G.paused)return;
-  var left=Math.max(0,G.endAt-performance.now()),sec=Math.ceil(left/1000);
-  setTimer(left/(G.time*1000),sec);
+  var left=Math.max(0,G.endAt-performance.now()),sec=Math.ceil(left/(1000*TIME_SCALE));
+  setTimer(left/(G.time*1000*TIME_SCALE),sec);
   if(sec!==G.lastSec){
     if(G.lastSec!==null&&sec>0&&sec<=5)sfx.tick();
     G.lastSec=sec;$('#game').classList.toggle('hurry',sec<=10&&G.time>10);
@@ -737,7 +738,7 @@ function submit(){
   setTimeout(function(){
     if(!G||G.id!==id||!G.running)return;
     G.locked=false;$('#cells').classList.add('live');nextQuestion();
-  },val===ans?450:1150);
+  },val===ans?220:1150);
 }
 function pause(){if(!G||!G.running||G.paused)return;G.paused=true;G.pauseAt=performance.now();cancelAnimationFrame(G.raf);}
 function resume(){if(!G||!G.running||!G.paused)return;G.endAt+=performance.now()-G.pauseAt;G.paused=false;loop();}
