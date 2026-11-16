@@ -162,7 +162,7 @@ button:disabled{cursor:default;opacity:.4}
   font-size:clamp(52px,10vh,96px);font-size:clamp(52px,10dvh,96px);font-variant-numeric:tabular-nums;
 }
 .q .op{color:var(--ink-soft);font-size:.8em}
-.q.new{animation:rise .22s ease-out}
+.q.new{animation:rise .15s ease-out}
 .ans-wrap{position:relative;display:flex;justify-content:center;--c:clamp(60px,9.4vh,86px);--c:clamp(60px,9.4dvh,86px)}
 .cells{display:flex}
 .cell{
@@ -179,7 +179,8 @@ button:disabled{cursor:default;opacity:.4}
 .mark{position:absolute;left:50%;top:50%;width:calc(var(--c) * 2 + 96px);height:calc(var(--c) + 58px);transform:translate(-50%,-50%);pointer-events:none;overflow:visible}
 .mark path{fill:none;stroke:var(--redpen);stroke-width:6;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;opacity:0}
 .mark[data-kind="ok"] .p-ok,.mark[data-kind="no"] .p-no{opacity:.92}
-.mark.on[data-kind="ok"] .p-ok{animation:draw .18s ease-out forwards}
+.mark.on[data-kind="ok"] .p-ok{animation:draw .1s ease-out forwards}
+.mark.out,.fb.out{opacity:0;transition:opacity .25s ease-out}
 .mark.on[data-kind="no"] .p-no{animation:draw .16s ease-out forwards}
 .fb{font-family:var(--pen);color:var(--redpen);font-size:clamp(26px,4.4vh,38px);font-size:clamp(26px,4.4dvh,38px);line-height:1;min-height:1em;text-align:center}
 .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
@@ -640,12 +641,13 @@ function refill(){
   if(G.last&&n>0&&pairs[n][0]===G.last[0]&&pairs[n][1]===G.last[1]){var t=pairs[n];pairs[n]=pairs[0];pairs[0]=t;}
   G.bag=pairs;
 }
-function nextQuestion(){
+function nextQuestion(fade){
   if(!G.bag.length)refill();
   G.q=G.bag.pop();G.last=G.q;G.input='';
   $('#qa').textContent=G.q[0];$('#qb').textContent=G.q[1];
   var q=$('#q');q.classList.remove('new');void q.offsetWidth;q.classList.add('new');
-  clearMark();$('#fb').textContent='';setInput('');
+  if(fade)fadeMark();else{clearMark();$('#fb').textContent='';}
+  setInput('');
 }
 function setInput(s){
   $$('#cells .cell').forEach(function(c,i){
@@ -653,8 +655,16 @@ function setInput(s){
     c.classList.toggle('cur',i===s.length);
   });
 }
-function showMark(kind){var m=$('#mark');m.setAttribute('data-kind',kind);m.classList.remove('on');void m.getBoundingClientRect();m.classList.add('on');}
-function clearMark(){var m=$('#mark');m.classList.remove('on');m.setAttribute('data-kind','');}
+function showMark(kind){var m=$('#mark');m.classList.remove('out');$('#fb').classList.remove('out');m.setAttribute('data-kind',kind);m.classList.remove('on');void m.getBoundingClientRect();m.classList.add('on');}
+function clearMark(){var m=$('#mark');m.classList.remove('on','out');m.setAttribute('data-kind','');}
+/* 정답 동그라미와 '딩동!' 글자는 다음 문제가 나온 뒤에 살짝 사라지게 */
+function fadeMark(){
+  var m=$('#mark'),fb=$('#fb');m.classList.add('out');fb.classList.add('out');
+  setTimeout(function(){
+    if(m.classList.contains('out'))clearMark();
+    if(fb.classList.contains('out')){fb.textContent='';fb.classList.remove('out');}
+  },260);
+}
 function updateScore(){$('#cOk').textContent=G.ok;$('#cNo').textContent=G.no;}
 function setTimer(frac,sec){$('#pencil').style.setProperty('--p',Math.max(0,Math.min(1,frac)).toFixed(4));$('#timeText').textContent=clock(sec);}
 
@@ -737,8 +747,8 @@ function submit(){
   updateScore();
   setTimeout(function(){
     if(!G||G.id!==id||!G.running)return;
-    G.locked=false;$('#cells').classList.add('live');nextQuestion();
-  },val===ans?220:1150);
+    G.locked=false;$('#cells').classList.add('live');nextQuestion(val===ans);
+  },val===ans?100:1150);
 }
 function pause(){if(!G||!G.running||G.paused)return;G.paused=true;G.pauseAt=performance.now();cancelAnimationFrame(G.raf);}
 function resume(){if(!G||!G.running||!G.paused)return;G.endAt+=performance.now()-G.pauseAt;G.paused=false;loop();}
