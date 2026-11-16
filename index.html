@@ -929,6 +929,12 @@ function bind(){
 function registerSW(){
   if(!('serviceWorker' in navigator)||!/^https?:$/.test(location.protocol))return;
   try{navigator.serviceWorker.register('sw.js').catch(function(){});}catch(e){}
+  /* 설치한 앱을 오래 백그라운드에 뒀다가 다시 열면, 첫 화면일 때만 새로고침해서 최신 버전을 받음 */
+  var hiddenAt=0;
+  document.addEventListener('visibilitychange',function(){
+    if(document.hidden){hiddenAt=Date.now();return;}
+    if(hiddenAt&&Date.now()-hiddenAt>=10*60*1000&&current==='home'&&$('#modal').hidden)location.reload();
+  });
 }
 
 function boot(data){
